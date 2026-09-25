@@ -1,0 +1,116 @@
+/*
+ * Paleta de PRODUTO — [proposta], item em aberto #1 do FRONTEND.md.
+ * Deriva da paleta de marca (logo/README.md: Floresta #002820, Verde de ação
+ * #46E57F, Menta #DFECE3, Gelo #F5F6F8) sem redefinir cor de marca — só
+ * estende para superfícies/texto/estado que a marca não cobre.
+ * Vermelho é EXCLUSIVO do erro de sincronização (§9 do FRONTEND.md) — não
+ * reutilizar --color-danger em nenhum outro contexto.
+ */
+
+:root {
+  color-scheme: light;
+
+  --color-bg: #f4f8f5;
+  --color-surface: #ffffff;
+  --color-surface-alt: #eaf1ec;
+  --color-border: rgba(0, 40, 32, 0.12);
+  --color-border-strong: rgba(0, 40, 32, 0.22);
+
+  --color-text: #0e1a16;
+  --color-text-muted: #55665f;
+  --color-text-faint: #8a988f;
+
+  --color-accent: #46e57f;
+  --color-accent-fg: #002820;
+  --color-accent-pressed: #2fc966;
+
+  --color-danger: #d93025;
+  --color-danger-bg: #fbe9e7;
+  --color-warning: #a8620a;
+  --color-warning-bg: #fbedd3;
+
+  --color-floresta: #002820;
+  --color-menta: #dfece3;
+  --color-gelo: #f5f6f8;
+
+  /* Cor de categoria vem da API (Category.color, semeada pelo backend com
+     10 categorias — item em aberto #3 do FRONTEND.md resolvido lá) e é
+     aplicada inline onde precisa — nunca é o único sinal (§14), sempre
+     acompanhada de ícone + nome. */
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 40, 32, 0.06);
+  --shadow-md: 0 2px 8px rgba(0, 40, 32, 0.1);
+
+  --motion-fast: 120ms;
+  --motion-base: 160ms;
+  --motion-slow: 200ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  --font-display: 'Space Grotesk Variable', 'Space Grotesk', system-ui, sans-serif;
+  --font-body: 'Inter Variable', 'Inter', system-ui, sans-serif;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/* AMOLED puro no escuro — propositalmente mais escuro que o Floresta da marca. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #000000;
+  --color-surface: #0a0c0b;
+  --color-surface-alt: #12201a;
+  --color-border: rgba(245, 246, 248, 0.12);
+  --color-border-strong: rgba(245, 246, 248, 0.22);
+
+  --color-text: #f5f6f8;
+  --color-text-muted: #a9b6b0;
+  --color-text-faint: #6f7d76;
+
+  --color-accent: #46e57f;
+  --color-accent-fg: #002820;
+  --color-accent-pressed: #6df0a1;
+
+  --color-danger: #ff6b5d;
+  --color-danger-bg: #2a1512;
+  --color-warning: #f2b341;
+  --color-warning-bg: #2a2110;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):not([data-theme='dark']) {
+    color-scheme: dark;
+    --color-bg: #000000;
+    --color-surface: #0a0c0b;
+    --color-surface-alt: #12201a;
+    --color-border: rgba(245, 246, 248, 0.12);
+    --color-border-strong: rgba(245, 246, 248, 0.22);
+    --color-text: #f5f6f8;
+    --color-text-muted: #a9b6b0;
+    --color-text-faint: #6f7d76;
+    --color-accent-pressed: #6df0a1;
+    --color-danger: #ff6b5d;
+    --color-danger-bg: #2a1512;
+    --color-warning: #f2b341;
+    --color-warning-bg: #2a2110;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-slow: 0ms;
+  }
+}

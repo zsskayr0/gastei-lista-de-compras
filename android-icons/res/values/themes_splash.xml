@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Requer androidx.core:core-splashscreen. Ajuste postSplashScreenTheme para o tema do app. -->
+    <style name="Theme.Gastei.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="postSplashScreenTheme">@style/Theme.Gastei</item>
+    </style>
+</resources>

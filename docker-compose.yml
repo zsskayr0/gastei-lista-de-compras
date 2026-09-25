@@ -1,0 +1,56 @@
+name: gastei
+
+services:
+  gastei-db:
+    container_name: gastei-postgres
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gastei}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: ${POSTGRES_DB:-gastei}
+    volumes:
+      - gastei-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gastei} -d ${POSTGRES_DB:-gastei}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - gastei-internal
+
+  gastei-server:
+    container_name: gastei-server
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      gastei-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-gastei}:${POSTGRES_PASSWORD}@gastei-db:5432/${POSTGRES_DB:-gastei}?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?defina JWT_ACCESS_SECRET no .env}
+      ACCESS_TOKEN_TTL: ${ACCESS_TOKEN_TTL:-15m}
+      REFRESH_TOKEN_TTL_DAYS: ${REFRESH_TOKEN_TTL_DAYS:-90}
+      PORT: 3283
+    ports:
+      # Mesmo padrão do Immich (2283:2283): a porta do host abre direto
+      # o cliente (frontend servido pelo próprio servidor; API em /api). Sem outras portas expostas (BACKEND.md §6 —
+      # acesso só via Tailscale).
+      - "${GASTEI_PORT:-3283}:3283"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3283/api/health', r => process.exit(r.statusCode===200?0:1)).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - gastei-internal
+
+volumes:
+  gastei-postgres-data:
+
+networks:
+  gastei-internal:
+    driver: bridge
