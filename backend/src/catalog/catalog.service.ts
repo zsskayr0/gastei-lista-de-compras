@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { FamilyAccessService } from '../common/family-access.service';
 import { BulkCreateCatalogDto, UpdateCatalogItemDto } from './dto/catalog.dto';
@@ -46,6 +46,59 @@ export class CatalogService {
       this.prisma.catalogItem.delete({ where: { id: catalogItemId } }),
     ]);
     return { ok: true };
+  }
+
+  /** Tipo real da imagem pelos primeiros bytes: nunca confia no Content-Type do cliente. */
+  private sniffImage(buf: Buffer): string | null {
+    if (buf.length > 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg';
+    if (buf.length > 8 && buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+      return 'image/png';
+    }
+    if (
+      buf.length > 12 &&
+      buf.subarray(0, 4).toString('ascii') === 'RIFF' &&
+      buf.subarray(8, 12).toString('ascii') === 'WEBP'
+    ) {
+      return 'image/webp';
+    }
+    return null;
+  }
+
+  async setImage(userId: string, catalogItemId: string, data: Buffer) {
+    const item = await this.prisma.catalogItem.findUnique({ where: { id: catalogItemId } });
+    if (!item) throw new NotFoundException('Item de catálogo não encontrado.');
+    await this.familyAccess.assertRole(userId, item.familyId, ['owner']);
+
+    const mime = this.sniffImage(data);
+    if (!mime) throw new BadRequestException('Formato de imagem não suportado (use JPG, PNG ou WebP).');
+
+    const [, updated] = await this.prisma.$transaction([
+      this.prisma.catalogImage.upsert({
+        where: { catalogItemId },
+        create: { catalogItemId, mime, data },
+        update: { mime, data },
+      }),
+      this.prisma.catalogItem.update({ where: { id: catalogItemId }, data: { imageUpdatedAt: new Date() } }),
+    ]);
+    return updated;
+  }
+
+  async removeImage(userId: string, catalogItemId: string) {
+    const item = await this.prisma.catalogItem.findUnique({ where: { id: catalogItemId } });
+    if (!item) throw new NotFoundException('Item de catálogo não encontrado.');
+    await this.familyAccess.assertRole(userId, item.familyId, ['owner']);
+
+    const [, updated] = await this.prisma.$transaction([
+      this.prisma.catalogImage.deleteMany({ where: { catalogItemId } }),
+      this.prisma.catalogItem.update({ where: { id: catalogItemId }, data: { imageUpdatedAt: null } }),
+    ]);
+    return updated;
+  }
+
+  async getImage(catalogItemId: string) {
+    const image = await this.prisma.catalogImage.findUnique({ where: { catalogItemId } });
+    if (!image) throw new NotFoundException('Sem imagem.');
+    return image;
   }
 
   async bulkCreate(userId: string, dto: BulkCreateCatalogDto) {

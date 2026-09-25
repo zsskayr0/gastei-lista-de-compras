@@ -29,6 +29,18 @@ export default defineConfig(() => ({
       workbox: {
         // App shell só — dados sempre vêm do armazenamento local, nunca de cache de rede.
         globPatterns: ["**/*.{js,css,html,woff2,ttf,svg,png}"],
+        // Fotos do catálogo: a URL leva ?v=<versão>, então cache eterno é seguro.
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith("/api/media/"),
+            handler: "CacheFirst" as const,
+            options: {
+              cacheName: "catalog-images",
+              expiration: { maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 180 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
       },
     }),
   ],

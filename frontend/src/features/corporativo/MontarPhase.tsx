@@ -3,6 +3,7 @@ import { Check, ChevronDown, StickyNote, Trash2 } from 'lucide-react';
 import { useCatalogStore } from '../../state/catalogStore';
 import { useListsStore } from '../../state/listsStore';
 import { useCorporativoUiStore } from '../../state/corporativoUiStore';
+import { CatalogThumb } from '../../components/ui/CatalogThumb';
 import { ItemGlyph } from '../../components/ui/ItemGlyph';
 import { Stepper } from '../../components/ui/Stepper';
 import { IconButton } from '../../components/ui/IconButton';
@@ -46,11 +47,11 @@ function CatalogRow({ listId, catalogItem, existing, index }: CatalogRowProps) {
     catalogItem.frequency === 'recorrente' && expected > 0 && planned === 0 && !isSilenced;
 
   return (
-    <li style={cascadeStyle(index)} className="border-b border-[var(--color-border)] px-4 py-2.5">
-      <div className="flex items-center gap-3">
-        <ItemGlyph name={catalogItem.name} colorHex={category?.color} />
+    <li style={cascadeStyle(index)} className="border-b border-[var(--color-border)] px-4 py-3">
+      <div className="flex items-center gap-3.5">
+        <CatalogThumb item={catalogItem} size={64} colorHex={category?.color} className="!rounded-[var(--radius-lg)]" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] text-[var(--color-text)]">{catalogItem.name}</p>
+          <p className="truncate text-base font-medium leading-snug text-[var(--color-text)]">{catalogItem.name}</p>
           <p className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
             <span className="min-w-0 truncate">
               {expected > 0 && `esperado ${expected}`}
@@ -129,13 +130,13 @@ function CustomItemRow({ item, index }: { item: ListItem; index: number }) {
   const [noting, setNoting] = useState(false);
 
   return (
-    <li style={cascadeStyle(index)} className="flex items-center gap-3 border-b border-[var(--color-border)] px-4 py-2.5">
-      <ItemGlyph name={item.name} colorHex={category?.color} />
+    <li style={cascadeStyle(index)} className="flex items-center gap-3.5 border-b border-[var(--color-border)] px-4 py-3">
+      <ItemGlyph name={item.name} colorHex={category?.color} size={64} />
       <div className="min-w-0 flex-1">
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="block max-w-full truncate text-left text-[15px] text-[var(--color-text)]"
+          className="block max-w-full truncate text-left text-base font-medium leading-snug text-[var(--color-text)]"
           aria-label="Renomear item"
         >
           {item.name}

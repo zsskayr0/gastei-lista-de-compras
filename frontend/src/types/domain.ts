@@ -43,6 +43,8 @@ export interface CatalogItem {
   categoryId: string | null;
   frequency: Frequency;
   expectedQuantity: number | null;
+  /** Quando a foto foi enviada (null/ausente = sem foto) — também cache-buster da URL. */
+  imageUpdatedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

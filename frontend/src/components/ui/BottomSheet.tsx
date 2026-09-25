@@ -61,7 +61,7 @@ export function BottomSheet({ open, onClose, children, bottomOffset = 0 }: Botto
         role="dialog"
         aria-modal="true"
         style={{ marginBottom: bottomOffset }}
-        className="relative z-10 max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-[var(--radius-lg)] border-t border-[var(--color-border)] bg-[var(--color-surface)] pb-[calc(var(--safe-bottom)+12px)] shadow-[var(--shadow-md)] transition-transform duration-[var(--motion-base)] ease-[var(--motion-ease)] animate-[sheet-up_var(--motion-slow)_var(--motion-ease)]"
+        className="relative z-10 mx-auto w-full max-h-[85dvh] md:max-w-xl overflow-y-auto overscroll-contain rounded-t-[var(--radius-lg)] border-t border-[var(--color-border)] bg-[var(--color-surface)] pb-[calc(var(--safe-bottom)+12px)] shadow-[var(--shadow-md)] transition-transform duration-[var(--motion-base)] ease-[var(--motion-ease)] animate-[sheet-up_var(--motion-slow)_var(--motion-ease)]"
       >
         <div
           role="separator"

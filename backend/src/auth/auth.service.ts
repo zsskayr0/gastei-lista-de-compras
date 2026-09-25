@@ -42,7 +42,7 @@ export class AuthService {
   ) {}
 
   private get refreshTtlMs() {
-    const days = Number(this.config.get('REFRESH_TOKEN_TTL_DAYS') ?? 90);
+    const days = Number(this.config.get('REFRESH_TOKEN_TTL_DAYS') ?? 365);
     return days * 24 * 60 * 60 * 1000;
   }
 
@@ -148,16 +148,11 @@ export class AuthService {
     for (const session of candidates) {
       const matches = await bcrypt.compare(refreshToken, session.refreshTokenHash);
       if (matches) {
-        // Sliding window: rotate the refresh token and extend expiry silently.
-        const newRefreshToken = randomBytes(48).toString('hex');
-        const newRefreshTokenHash = await bcrypt.hash(newRefreshToken, 10);
-
+        // Sem rotação: o mesmo refresh token segue valendo (rotacionar derrubava a sessão
+        // quando duas renovações concorriam ou a resposta se perdia). Só estende a validade.
         await this.prisma.deviceSession.update({
           where: { id: session.id },
-          data: {
-            refreshTokenHash: newRefreshTokenHash,
-            refreshTokenExpiresAt: new Date(Date.now() + this.refreshTtlMs),
-          },
+          data: { refreshTokenExpiresAt: new Date(Date.now() + this.refreshTtlMs) },
         });
 
         const accessToken = this.jwt.sign(
@@ -168,7 +163,7 @@ export class AuthService {
           },
         );
 
-        return { accessToken, refreshToken: newRefreshToken };
+        return { accessToken, refreshToken };
       }
     }
 

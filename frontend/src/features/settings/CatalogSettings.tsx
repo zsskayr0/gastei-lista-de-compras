@@ -8,6 +8,8 @@ import { useAuthStore } from '../../lib/auth/authStore';
 import { useCatalogStore } from '../../state/catalogStore';
 import { catalogApi, dictionaryApi, type BulkCatalogEntry, type CatalogUpdateDto } from '../../lib/api/endpoints';
 import { normalizeText } from '../../utils/text';
+import { resizeImage } from '../../utils/image';
+import { CatalogThumb } from '../../components/ui/CatalogThumb';
 import { SettingsScreen } from './SettingsScreen';
 import { CatalogEditSheet } from './CatalogEditSheet';
 import { CatalogPasteSheet } from './CatalogPasteSheet';
@@ -113,10 +115,11 @@ function CatalogRow({ item, category, selected, selecting, onToggle, onEdit, onP
           (selected ? 'opacity-100' : 'opacity-0')
         }
       />
+      <CatalogThumb item={item} size={40} colorHex={category?.color} />
       <button
         type="button"
         onClick={onEdit}
-        className="min-h-[52px] min-w-0 flex-1 truncate pr-2 text-left text-[15px] text-[var(--color-text)]"
+        className="min-h-[60px] min-w-0 flex-1 truncate px-2 text-left text-[15px] text-[var(--color-text)]"
       >
         {item.name}
       </button>
@@ -168,7 +171,7 @@ function CatalogRow({ item, category, selected, selecting, onToggle, onEdit, onP
           {category ? category.name : 'Sem categoria'}
         </span>
       </button>
-      <button type="button" onClick={onEdit} tabIndex={-1} aria-hidden className="flex min-h-[52px] items-center pl-1 pr-2">
+      <button type="button" onClick={onEdit} tabIndex={-1} aria-hidden className="flex min-h-[60px] items-center pl-1 pr-2">
         <span className="w-[68px] text-right text-xs text-[var(--color-text-faint)]">
           {item.frequency === 'recorrente' ? 'Recorrente' : 'Rara'}
         </span>
@@ -255,6 +258,22 @@ export function CatalogSettings() {
       setEditing(null);
     });
 
+  // O item aberto na sheet é sempre a versão mais nova do store (ex.: depois de subir a foto).
+  const editingItem = editing ? (items.find((i) => i.id === editing.id) ?? editing) : null;
+
+  const uploadImage = (item: CatalogItem, file: File) =>
+    run('Enviar foto do item', async () => {
+      const blob = await resizeImage(file);
+      const updated = await catalogApi.uploadImage(item.id, blob);
+      await useCatalogStore.getState().upsertItems([updated]);
+    });
+
+  const removeImage = (item: CatalogItem) =>
+    run('Remover foto do item', async () => {
+      const updated = await catalogApi.removeImage(item.id);
+      await useCatalogStore.getState().upsertItems([updated]);
+    });
+
   const removeOne = (item: CatalogItem) =>
     run('Excluir item do catálogo', async () => {
       await catalogApi.remove(item.id);
@@ -316,7 +335,7 @@ export function CatalogSettings() {
 
   return (
     <SettingsScreen title="Catálogo">
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto w-full max-w-[2000px]">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <div className="relative min-w-[180px] flex-1">
             <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-faint)]" />
@@ -385,7 +404,7 @@ export function CatalogSettings() {
           <p className="py-8 text-center text-[var(--color-text-muted)]">Nada encontrado para “{query}”.</p>
         )}
 
-        <ul>
+        <ul className="lg:grid lg:grid-cols-2 lg:gap-x-6 xl:grid-cols-3 2xl:grid-cols-4">
           {filtered.map((item) => (
             <CatalogRow
               key={item.id}
@@ -428,13 +447,15 @@ export function CatalogSettings() {
         }}
       />
       <CatalogEditSheet
-        item={editing}
+        item={editingItem}
         categories={categories}
         saving={busy}
         error={editing ? error : null}
         onClose={() => setEditing(null)}
         onSave={(id, dto) => void saveOne(id, dto)}
         onDelete={(item) => void removeOne(item)}
+        onUploadImage={(item, file) => void uploadImage(item, file)}
+        onRemoveImage={(item) => void removeImage(item)}
       />
       <CatalogPasteSheet
         open={pasting}

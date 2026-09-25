@@ -199,16 +199,31 @@ model CatalogItem {
   categoryId        String?       @map("category_id")
   frequency         ItemFrequency @default(rara)
   expectedQuantity  Float?        @map("expected_quantity")
+  /// Quando a foto do item foi enviada pela última vez (null = sem foto). Serve de cache-buster.
+  imageUpdatedAt    DateTime?     @map("image_updated_at")
   createdAt         DateTime      @default(now()) @map("created_at")
   updatedAt         DateTime      @updatedAt @map("updated_at")
 
   family        Family           @relation(fields: [familyId], references: [id], onDelete: Cascade)
   category      Category?        @relation(fields: [categoryId], references: [id])
+  image         CatalogImage?
   templateItems TemplateItem[]
   dictionaryTerms DictionaryTerm[]
 
   @@index([familyId])
   @@map("catalog_items")
+}
+
+/// Foto do item de catálogo (já reduzida no cliente). Fica no banco para entrar no backup junto.
+model CatalogImage {
+  catalogItemId String   @id @map("catalog_item_id")
+  mime          String
+  data          Bytes
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  catalogItem CatalogItem @relation(fields: [catalogItemId], references: [id], onDelete: Cascade)
+
+  @@map("catalog_images")
 }
 
 model DictionaryTerm {

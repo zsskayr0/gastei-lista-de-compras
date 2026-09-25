@@ -97,13 +97,14 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Pr
   }
 
   const doFetch = async () => {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const isBlob = typeof Blob !== 'undefined' && body instanceof Blob;
+    const headers: Record<string, string> = { 'Content-Type': isBlob ? body.type || 'application/octet-stream' : 'application/json' };
     if (auth && session) headers.Authorization = `Bearer ${session.accessToken}`;
     try {
       return await fetch(url.toString(), {
         method,
         headers,
-        body: body !== undefined ? JSON.stringify(body) : undefined,
+        body: body === undefined ? undefined : isBlob ? (body as Blob) : JSON.stringify(body),
       });
     } catch (err) {
       throw new NetworkError(method, url.toString(), err instanceof Error ? err.message : String(err));

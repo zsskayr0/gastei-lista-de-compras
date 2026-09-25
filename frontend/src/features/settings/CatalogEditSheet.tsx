@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Camera, Trash2 } from 'lucide-react';
 import { ErrorCard } from '../../components/ui/ErrorViews';
 import type { DescribedError } from '../../lib/errors/describe';
 import { BottomSheet } from '../../components/ui/BottomSheet';
 import { Button } from '../../components/ui/Button';
+import { CatalogThumb } from '../../components/ui/CatalogThumb';
 import { FrequencyToggle } from '../../components/ui/FrequencyToggle';
 import { CategoryGrid } from '../../components/ui/CategoryPicker';
 import type { CatalogItem, Category, Frequency } from '../../types/domain';
@@ -19,12 +20,14 @@ interface Props {
   onClose: () => void;
   onSave: (id: string, dto: CatalogUpdateDto) => void;
   onDelete: (item: CatalogItem) => void;
+  onUploadImage: (item: CatalogItem, file: File) => void;
+  onRemoveImage: (item: CatalogItem) => void;
   /** Erro da última tentativa — aparece aqui porque a sheet cobre a tela. */
   error?: DescribedError | null;
 }
 
 /** Edição de um item do catálogo (nome, categoria, frequência, esperado). */
-export function CatalogEditSheet({ item, categories, saving, onClose, onSave, onDelete, error }: Props) {
+export function CatalogEditSheet({ item, categories, saving, onClose, onSave, onDelete, onUploadImage, onRemoveImage, error }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -38,7 +41,9 @@ export function CatalogEditSheet({ item, categories, saving, onClose, onSave, on
     setCategoryId(item.categoryId ?? '');
     setFrequency(item.frequency);
     setExpected(item.expectedQuantity != null ? String(item.expectedQuantity) : '');
-  }, [item]);
+    // Só reinicia o formulário ao trocar de item — subir uma foto atualiza `item` mas não pode apagar o que foi digitado.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item?.id]);
 
   if (!item) return null;
 
@@ -66,6 +71,35 @@ export function CatalogEditSheet({ item, categories, saving, onClose, onSave, on
         className="space-y-3 px-4 pt-3"
       >
         <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-faint)]">Editar item</p>
+        <div className="flex items-center gap-3">
+          <CatalogThumb item={item} size={72} colorHex={categories.find((c) => c.id === item.categoryId)?.color} />
+          <div className="flex flex-wrap gap-2">
+            <label
+              className={
+                'inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface-alt)] px-4 text-[15px] font-medium text-[var(--color-text)] transition-transform active:scale-[0.97] ' +
+                (saving ? 'pointer-events-none opacity-50' : '')
+              }
+            >
+              <Camera size={16} /> {item.imageUpdatedAt ? 'Trocar foto' : 'Adicionar foto'}
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                disabled={saving}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = ''; // permite escolher o mesmo arquivo de novo
+                  if (file) onUploadImage(item, file);
+                }}
+              />
+            </label>
+            {item.imageUpdatedAt && (
+              <Button type="button" variant="ghost" disabled={saving} onClick={() => onRemoveImage(item)}>
+                Remover foto
+              </Button>
+            )}
+          </div>
+        </div>
         <label className="block">
           <span className="mb-1 block text-sm text-[var(--color-text-muted)]">Nome</span>
           <input value={name} onChange={(e) => setName(e.target.value)} className={FIELD} />

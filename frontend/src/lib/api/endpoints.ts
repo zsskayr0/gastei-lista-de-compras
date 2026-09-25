@@ -109,6 +109,10 @@ export const catalogApi = {
   update: (id: string, dto: CatalogUpdateDto) =>
     apiRequest<CatalogItem>(`/catalog/${id}`, { method: 'PATCH', body: dto }),
   remove: (id: string) => apiRequest<{ ok: true }>(`/catalog/${id}`, { method: 'DELETE' }),
+  /** Envia a foto já reduzida (corpo cru). Devolve o item com `imageUpdatedAt` novo. */
+  uploadImage: (id: string, image: Blob) =>
+    apiRequest<CatalogItem>(`/catalog/${id}/image`, { method: 'POST', body: image }),
+  removeImage: (id: string) => apiRequest<CatalogItem>(`/catalog/${id}/image`, { method: 'DELETE' }),
   bulkCreate: (familyId: string, items: BulkCatalogEntry[]) =>
     apiRequest<CatalogItem[]>('/catalog/bulk', { method: 'POST', body: { familyId, items } }),
 };
