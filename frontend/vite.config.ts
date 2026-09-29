@@ -19,7 +19,7 @@ export default defineConfig(() => ({
         short_name: "Gastei",
         description: "Lista de compras compartilhada da família, local-first.",
         theme_color: "#3a0f24",
-        background_color: "#FFF8FB",
+        background_color: "#FFFBFD",
         display: "standalone",
         start_url: "/",
         icons: [

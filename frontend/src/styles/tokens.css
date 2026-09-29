@@ -8,10 +8,10 @@
 :root {
   color-scheme: light;
 
-  --color-bg: #fff8fb;
+  --color-bg: #fffbfd;
   --color-surface: #ffffff;
-  --color-surface-alt: #fdeaf2;
-  --color-border: rgba(190, 60, 110, 0.18);
+  --color-surface-alt: #fdf0f5;
+  --color-border: rgba(190, 60, 110, 0.14);
   --color-border-strong: rgba(190, 60, 110, 0.32);
 
   --color-text: #3b1f2b;
@@ -28,8 +28,8 @@
   --color-warning-bg: #fbedd3;
 
   --color-floresta: #3a0f24;
-  --color-menta: #fdeaf2;
-  --color-gelo: #fffafc;
+  --color-menta: #fdf0f5;
+  --color-gelo: #fffcfd;
 
   /* Cor de categoria vem da API (Category.color, semeada pelo backend com
      10 categorias — item em aberto #3 do FRONTEND.md resolvido lá) e é
