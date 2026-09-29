@@ -6,6 +6,31 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 Como publicar uma versão: atualize este arquivo, `git tag vX.Y.Z`, `git push --tags` e crie o release
 com `gh release create vX.Y.Z --notes-file <trecho>`.
 
+## [0.4.0] — 2026-09-29
+
+### Adicionado
+- **Botão "+" dinâmico:** o botão central muda de função conforme a tela — Inbox adiciona item direto no
+  Inbox; Casa e Corporativo criam uma lista (e, dentro de uma lista, adicionam itens nela). O ícone gira
+  até virar "×"; o popup de nova lista sobe e desce com fade. Saíram os "+" de dentro das telas e o
+  toque longo.
+- **Corporativo com várias listas**, como a Casa: cada compra diferente tem a sua lista (Montar e Comprar
+  dentro de cada uma), com renomear e excluir. Nova rota `/corporativo/:listId`.
+- **Ícone nas listas** de Casa e Corporativo: escolhido ao criar, trocável no menu da lista, mostrado nos
+  cards. Backend: `List.icon` (migration `list_icon_user_avatar`); a lista seguinte gerada no encerramento
+  herda o ícone.
+- **Foto de perfil** customizável em Ajustes → Conta (reduzida no aparelho, 256 px, guardada no banco).
+  Aparece nos avatares de quem riscou item, Inbox e Família. Backend: `POST/DELETE /users/me/avatar`,
+  `GET /media/avatar/:id`, `avatarUpdatedAt` na lista de membros.
+- **Sugestões na Entrada** vindas do catálogo: com o campo vazio, os mais usados; ao digitar, filtro por
+  começo de palavra, com foto/letra e ligação ao item de catálogo (categoria e quantidade esperada).
+- **Devolver ao Inbox** (Casa): botão em cada item pendente tira o item da lista e o manda de volta ao
+  Inbox (ressuscita o original, se veio de lá), com desfazer.
+- **APK Android** (Tauri): o servidor é informado na tela de login (o app instalado não roda no mesmo
+  endereço do servidor). Ícone de launcher da marca.
+
+### Alterado
+- **Paleta rosa** (pastel no geral, rosa mais forte nos botões e destaques), claro e escuro (AMOLED).
+
 ## [0.3.1] — 2026-09-25
 
 ### Adicionado

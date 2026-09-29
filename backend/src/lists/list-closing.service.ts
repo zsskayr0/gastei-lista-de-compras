@@ -120,6 +120,7 @@ export class ListClosingService {
         familyId: closedList.familyId,
         folder: 'corporativo',
         title: closedList.title,
+        icon: closedList.icon,
         status: 'active',
         phase: 'montar',
         templateId: template?.id,

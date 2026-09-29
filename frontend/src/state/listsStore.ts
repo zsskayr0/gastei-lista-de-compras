@@ -55,6 +55,9 @@ interface ListsState {
    * pra ela de uma vez (§4 do FRONTEND.md: "vira sugestão pronta ao
    * montar lista de Casa e some do Inbox"). */
   buildListFromInbox: (title: string, inboxItems: ListItem[]) => Promise<List | null>;
+  /** Tira o item da lista e devolve ao Inbox (ressuscita o original se veio de
+   * lá; senão cria um novo). Devolve o item que ficou no Inbox, pro desfazer. */
+  returnItemToInbox: (item: ListItem) => Promise<ListItem | null>;
   setQuantity: (item: ListItem, quantityPlanned: number) => Promise<void>;
   renameItem: (item: ListItem, name: string) => Promise<void>;
   /** Define/limpa a observação do item (texto vazio limpa). */
@@ -78,8 +81,10 @@ interface ListsState {
   setCatalogQuantity: (listId: string, catalogItem: CatalogItem, delta: number) => Promise<void>;
   setPhase: (listId: string, phase: ListPhase) => Promise<void>;
 
-  createList: (folder: 'casa' | 'corporativo' | 'inbox', title: string) => Promise<List | null>;
+  createList: (folder: 'casa' | 'corporativo' | 'inbox', title: string, icon?: string) => Promise<List | null>;
   renameList: (listId: string, title: string) => Promise<void>;
+  /** Troca (ou, com `null`, remove) o ícone da lista. Vai por REST — não é campo de sync. */
+  setListIcon: (listId: string, icon: string | null) => Promise<void>;
   deleteList: (listId: string) => Promise<void>;
 
   applyLocalListItemsPatch: (listId: string, items: ListItem[]) => void;
@@ -258,6 +263,27 @@ export const useListsStore = create<ListsState>((set, get) => ({
       sourceInboxItemId: inboxItem.id,
     });
     await get().softDeleteItem(inboxItem);
+  },
+
+  returnItemToInbox: async (item) => {
+    const source = item.sourceInboxItemId ? await listItemsRepo.get(item.sourceInboxItemId) : undefined;
+    let back: ListItem | null = null;
+
+    if (source?.deletedAt) {
+      await get().restoreItem(source);
+      back = get().itemsFor(source.listId).find((i) => i.id === source.id) ?? source;
+    } else {
+      let inbox = get().inboxList();
+      if (!inbox) inbox = (await get().createList('inbox', 'Inbox')) ?? undefined;
+      if (!inbox) return null;
+      back = await get().addItem(inbox.id, item.name, {
+        categoryId: item.categoryId,
+        quantityPlanned: item.quantityPlanned,
+      });
+    }
+
+    await get().softDeleteItem(item);
+    return back;
   },
 
   buildListFromInbox: async (title, inboxItems) => {
@@ -506,17 +532,30 @@ export const useListsStore = create<ListsState>((set, get) => ({
     }
   },
 
-  createList: async (folder, title) => {
+  createList: async (folder, title, icon) => {
     const { identity } = get();
     if (!identity) return null;
     try {
-      const created = await listsApi.create({ familyId: identity.familyId, folder, title });
+      const created = await listsApi.create({ familyId: identity.familyId, folder, title, icon });
       await listsRepo.put(created);
       set((s) => ({ lists: [...s.lists, created], itemsByList: { ...s.itemsByList, [created.id]: [] } }));
       return created;
     } catch (err) {
       reportError(err, `Criar lista "${title}"`);
       return null;
+    }
+  },
+
+  setListIcon: async (listId, icon) => {
+    const list = get().lists.find((l) => l.id === listId);
+    if (!list) return;
+    const updated: List = { ...list, icon };
+    set((s) => ({ lists: s.lists.map((l) => (l.id === listId ? updated : l)) }));
+    await listsRepo.put(updated);
+    try {
+      await listsApi.update(listId, { icon: icon ?? '' });
+    } catch (err) {
+      reportError(err, 'Trocar ícone da lista');
     }
   },
 

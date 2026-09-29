@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/Button';
 import { pickVoice } from '../../content/voice';
 import { TextInputSheet } from '../../components/ui/TextInputSheet';
 import { BuildFromInboxSheet } from './BuildFromInboxSheet';
+import { ListIcon } from '../../components/ui/ListIcon';
 
 export function CasaPage() {
   const allLists = useListsStore((s) => s.lists);
@@ -67,9 +68,6 @@ export function CasaPage() {
           <IconButton label="Montar a partir do Inbox" onClick={() => setBuildingFromInbox(true)}>
             <Inbox size={20} />
           </IconButton>
-          <IconButton label="Nova lista" onClick={() => setCreating(true)}>
-            <Plus size={20} />
-          </IconButton>
         </div>
       </div>
       <ul className="grid grid-cols-1 gap-2 px-4">
@@ -80,9 +78,10 @@ export function CasaPage() {
             <li key={l.id}>
               <Link
                 to={`/casa/${l.id}`}
-                className="flex items-center justify-between rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 transition-transform active:scale-[0.99]"
+                className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 transition-transform active:scale-[0.99]"
               >
-                <span className="font-display text-[15px] font-medium text-[var(--color-text)]">
+                <ListIcon list={l} />
+                <span className="font-display min-w-0 flex-1 truncate text-[15px] font-medium text-[var(--color-text)]">
                   {l.title}
                 </span>
                 <span className="tabular-nums text-sm text-[var(--color-text-muted)]">

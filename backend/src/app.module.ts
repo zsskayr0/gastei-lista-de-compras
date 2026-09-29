@@ -13,6 +13,7 @@ import { CatalogModule } from './catalog/catalog.module';
 import { DictionaryTermsModule } from './dictionary-terms/dictionary-terms.module';
 import { HistoryModule } from './history/history.module';
 import { JobsModule } from './jobs/jobs.module';
+import { UsersModule } from './users/users.module';
 import { HealthController } from './health.controller';
 
 @Module({
@@ -22,6 +23,7 @@ import { HealthController } from './health.controller';
     PrismaModule,
     AuthModule,
     InvitesModule,
+    UsersModule,
     FamiliesModule,
     ListsModule,
     SyncModule,

@@ -55,6 +55,7 @@ model User {
   email        String   @unique
   passwordHash String   @map("password_hash")
   createdAt    DateTime @default(now()) @map("created_at")
+  avatarUpdatedAt DateTime? @map("avatar_updated_at")
 
   deviceSessions      DeviceSession[]
   familyMemberships   FamilyMember[]
@@ -62,6 +63,7 @@ model User {
   createdInvites      Invite[]              @relation("InviteCreatedBy")
   usedInvites         Invite[]              @relation("InviteUsedBy")
   passwordResetTokens PasswordResetToken[]
+  avatar              UserAvatar?
 
   @@map("users")
 }
@@ -249,6 +251,7 @@ model List {
   familyId                String     @map("family_id")
   folder                  ListFolder
   title                   String
+  icon                    String?
   status                  ListStatus @default(active)
   phase                   ListPhase?
   purchasePhaseStartedAt  DateTime?  @map("purchase_phase_started_at")
@@ -326,4 +329,16 @@ model SyncEvent {
   @@index([listId, serverTimestamp])
   @@index([familyId])
   @@map("sync_events")
+}
+
+/// Foto de perfil (já reduzida no cliente). Fica no banco para entrar no backup junto.
+model UserAvatar {
+  userId    String   @id @map("user_id")
+  mime      String
+  data      Bytes
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_avatars")
 }

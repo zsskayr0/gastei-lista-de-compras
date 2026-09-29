@@ -1,65 +1,41 @@
-import { useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
 import clsx from 'clsx';
 
 interface PlusButtonProps {
   disabled?: boolean;
+  /** Painel aberto (Entrada ou popup de lista): o "+" gira até virar "×". */
+  open: boolean;
+  label: string;
+  /** Fica acima do fundo escurecido do popup, para poder fechá-lo. Nunca
+   * acima do sheet de Entrada, que precisa cobrir a barra inteira. */
+  raised: boolean;
   onTap: () => void;
-  onLongPress: () => void;
 }
 
-const LONG_PRESS_MS = 300;
-
-function vibrate(ms: number) {
-  if ('vibrate' in navigator) navigator.vibrate(ms);
-}
-
-/** Botão "+" com dois gestos (§5): toque abre Entrada, toque longo abre o
- * popup de Lista com vibração curta. */
-export function PlusButton({ disabled, onTap, onLongPress }: PlusButtonProps) {
-  const [pressed, setPressed] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const firedLongPress = useRef(false);
-
-  const start = () => {
-    if (disabled) return;
-    setPressed(true);
-    firedLongPress.current = false;
-    timer.current = setTimeout(() => {
-      firedLongPress.current = true;
-      vibrate(20);
-      onLongPress();
-    }, LONG_PRESS_MS);
-  };
-
-  const end = () => {
-    setPressed(false);
-    if (timer.current) clearTimeout(timer.current);
-    if (!firedLongPress.current && !disabled) onTap();
-  };
-
-  const cancel = () => {
-    setPressed(false);
-    if (timer.current) clearTimeout(timer.current);
-  };
-
+/** Botão central dinâmico: o destino do toque depende da tela (§5) e o ícone
+ * gira ao abrir e desgira ao fechar. */
+export function PlusButton({ disabled, open, label, raised, onTap }: PlusButtonProps) {
   return (
     <button
       type="button"
-      aria-label="Adicionar"
+      aria-label={label}
+      aria-expanded={open}
       disabled={disabled}
-      onPointerDown={start}
-      onPointerUp={end}
-      onPointerLeave={cancel}
-      onContextMenu={(e) => e.preventDefault()}
+      onClick={onTap}
       className={clsx(
-        'flex h-14 w-14 -translate-y-4 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-fg)] shadow-[var(--shadow-md)]',
-        'transition-transform duration-[var(--motion-fast)] ease-[var(--motion-ease)]',
-        pressed && 'scale-90',
+        'relative flex h-14 w-14 -translate-y-4 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-fg)] shadow-[var(--shadow-md)]',
+        'transition-[translate,scale,opacity] duration-[var(--motion-base)] ease-[var(--motion-ease)] active:scale-90',
+        raised && 'z-[60]',
         disabled && 'opacity-40',
       )}
     >
-      <Plus size={26} />
+      <Plus
+        size={26}
+        className={clsx(
+          'transition-transform duration-[360ms] ease-[cubic-bezier(0.34,1.2,0.5,1)] motion-reduce:transition-none',
+          open ? 'rotate-[225deg]' : 'rotate-0',
+        )}
+      />
     </button>
   );
 }

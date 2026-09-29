@@ -9,10 +9,37 @@ import type { AuthSession } from '../../types/domain';
 
 // Backend monta tudo sob o prefixo global "api" (main.ts: setGlobalPrefix('api')).
 const DEFAULT_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3283/api';
-let baseUrlOverride: string | null = null;
+const BASE_URL_KEY = 'gastei:apiBase';
 
+// Lido de forma síncrona (como o tema): o app instalado (APK) não fala com o
+// mesmo endereço em que foi servido, então o servidor é escolhido no login.
+function readStoredBaseUrl(): string | null {
+  try {
+    return localStorage.getItem(BASE_URL_KEY);
+  } catch {
+    return null;
+  }
+}
+
+let baseUrlOverride: string | null = readStoredBaseUrl();
+
+/** Endereço do servidor escolhido pelo usuário (ex.: `http://192.168.0.10:3283`);
+ * `null` volta ao padrão do build. Aceita com ou sem o sufixo `/api`. */
 export function setApiBaseUrl(url: string | null) {
-  baseUrlOverride = url;
+  const trimmed = url?.trim().replace(/\/+$/, '') ?? '';
+  const normalized = trimmed ? (trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`) : null;
+  baseUrlOverride = normalized;
+  try {
+    if (normalized) localStorage.setItem(BASE_URL_KEY, normalized);
+    else localStorage.removeItem(BASE_URL_KEY);
+  } catch {
+    // ignora
+  }
+}
+
+/** Só o app instalado (Tauri/APK) precisa escolher o servidor; no navegador ele é o próprio host. */
+export function isNativeShell(): boolean {
+  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 }
 
 export function getApiBaseUrl(): string {

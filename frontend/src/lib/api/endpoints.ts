@@ -69,10 +69,10 @@ export const authApi = {
 export const listsApi = {
   // Já vem com `items` embutidos (ListsService.listForFamily inclui items não-deletados).
   listForFamily: (familyId: string) => apiRequest<Array<List & { items: ListItem[] }>>(`/families/${familyId}/lists`),
-  create: (dto: { familyId: string; folder: string; title: string; templateId?: string }) =>
+  create: (dto: { familyId: string; folder: string; title: string; icon?: string; templateId?: string }) =>
     apiRequest<List>('/lists', { method: 'POST', body: dto }),
   get: (id: string) => apiRequest<List & { items: ListItem[] }>(`/lists/${id}`),
-  update: (id: string, dto: Partial<Pick<List, 'title' | 'phase' | 'status'>>) =>
+  update: (id: string, dto: Partial<Pick<List, 'title' | 'phase' | 'status'>> & { icon?: string }) =>
     apiRequest<List>(`/lists/${id}`, { method: 'PATCH', body: dto }),
   softDelete: (id: string) => apiRequest<void>(`/lists/${id}`, { method: 'DELETE' }),
 };
@@ -135,9 +135,16 @@ export const invitesApi = {
   cancel: (id: string) => apiRequest<void>(`/invites/${id}`, { method: 'DELETE' }),
 };
 
+export const usersApi = {
+  /** Envia a foto de perfil já reduzida (corpo cru). */
+  uploadAvatar: (image: Blob) =>
+    apiRequest<{ avatarUpdatedAt: string }>('/users/me/avatar', { method: 'POST', body: image }),
+  removeAvatar: () => apiRequest<{ avatarUpdatedAt: null }>('/users/me/avatar', { method: 'DELETE' }),
+};
+
 export const familiesApi = {
   members: (familyId: string) =>
-    apiRequest<Array<{ userId: string; name: string; role: Role }>>(`/families/${familyId}/members`),
+    apiRequest<Array<{ userId: string; name: string; role: Role; avatarUpdatedAt?: string | null }>>(`/families/${familyId}/members`),
   syncStatus: (familyId: string) =>
     apiRequest<{ serverTime: string; members: SyncStatusMember[] }>(`/families/${familyId}/sync-status`),
   presence: (familyId: string) =>

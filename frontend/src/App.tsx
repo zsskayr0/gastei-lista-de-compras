@@ -17,6 +17,7 @@ import { InboxPage } from './features/inbox/InboxPage';
 import { CasaPage } from './features/casa/CasaPage';
 import { CasaListPage } from './features/casa/CasaListPage';
 import { CorporativoPage } from './features/corporativo/CorporativoPage';
+import { CorporativoListPage } from './features/corporativo/CorporativoListPage';
 import { SettingsHome } from './features/settings/SettingsHome';
 import { AccountSettings } from './features/settings/AccountSettings';
 import { DeviceSettings } from './features/settings/DeviceSettings';
@@ -59,6 +60,7 @@ function SignedInRoutes() {
         <Route path="/casa" element={<CasaPage />} />
         <Route path="/casa/:listId" element={<CasaListPage />} />
         <Route path="/corporativo" element={<CorporativoPage />} />
+        <Route path="/corporativo/:listId" element={<CorporativoListPage />} />
         <Route path="/ajustes" element={<SettingsHome />} />
         <Route path="/ajustes/conta" element={<AccountSettings />} />
         <Route path="/ajustes/aparelho" element={<DeviceSettings />} />

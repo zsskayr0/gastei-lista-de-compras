@@ -1,93 +1,85 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Briefcase, Plus } from 'lucide-react';
 import { useListsStore } from '../../state/listsStore';
-import { useCatalogStore } from '../../state/catalogStore';
-import { useCorporativoUiStore } from '../../state/corporativoUiStore';
-import { useAuthStore } from '../../lib/auth/authStore';
-import { useListSync, useRemoteCheckNotice } from '../../hooks/useListSync';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Button } from '../../components/ui/Button';
-import { IconButton } from '../../components/ui/IconButton';
-import { SyncErrorBanner } from '../../components/ui/SyncErrorBanner';
-import { AddItemSheet } from '../add-item/AddItemSheet';
-import { PhaseSwitch } from './PhaseSwitch';
-import { MontarPhase } from './MontarPhase';
-import { ComprarPhase } from './ComprarPhase';
+import { TextInputSheet } from '../../components/ui/TextInputSheet';
+import { ListIcon } from '../../components/ui/ListIcon';
 
-/** Corporativo (§6): uma lista "viva" por vez, Montar e Comprar na mesma
- * tela — o estado persiste ao trocar de fase, não são rotas separadas. */
+/** Corporativo: várias listas, como Casa — cada compra diferente tem a sua.
+ * Cada lista tem Montar e Comprar (ver CorporativoListPage). */
 export function CorporativoPage() {
-  const session = useAuthStore((s) => s.session);
-  const list = useListsStore((s) => s.corporativoList());
+  const allLists = useListsStore((s) => s.lists);
+  const itemsByList = useListsStore((s) => s.itemsByList);
   const status = useListsStore((s) => s.status);
-  const setPhase = useListsStore((s) => s.setPhase);
   const createList = useListsStore((s) => s.createList);
+  const lists = useMemo(
+    () => allLists.filter((l) => l.folder === 'corporativo' && l.status === 'active'),
+    [allLists],
+  );
   const [creating, setCreating] = useState(false);
-  const [addingCustom, setAddingCustom] = useState(false);
-  const [highlight, setHighlight] = useState<{ itemId: string; by: string } | null>(null);
-
-  useListSync(list?.id, session?.familyId);
-
-  const onChecked = useCallback((itemId: string, actorName: string) => {
-    setHighlight({ itemId, by: actorName });
-    setTimeout(() => setHighlight((h) => (h?.itemId === itemId ? null : h)), 2000);
-  }, []);
-  useRemoteCheckNotice(list?.id, onChecked);
-
-  useEffect(() => {
-    if (session) void useCatalogStore.getState().init(session.familyId);
-  }, [session]);
-
-  useEffect(() => {
-    if (list) void useCorporativoUiStore.getState().loadForList(list.id);
-  }, [list]);
+  const navigate = useNavigate();
 
   if (status === 'loading') return null;
 
-  if (!list) {
+  const sheet = (
+    <TextInputSheet
+      open={creating}
+      onClose={() => setCreating(false)}
+      title="Nova lista no Corporativo"
+      confirmLabel="Criar"
+      onSubmit={(name) =>
+        void createList('corporativo', name).then((created) => {
+          if (created) navigate(`/corporativo/${created.id}`);
+        })
+      }
+    />
+  );
+
+  if (lists.length === 0) {
     return (
-      <EmptyState
-        icon={<Briefcase size={32} />}
-        message="Nenhuma lista viva no Corporativo ainda."
-        action={
-          <Button
-            disabled={creating}
-            onClick={async () => {
-              setCreating(true);
-              await createList('corporativo', 'Corporativo');
-              setCreating(false);
-            }}
-          >
-            {creating ? 'Criando…' : 'Começar'}
-          </Button>
-        }
-      />
+      <>
+        <EmptyState
+          icon={<Briefcase size={32} />}
+          message="Nenhuma lista no Corporativo ainda."
+          action={
+            <Button onClick={() => setCreating(true)}>
+              <Plus size={16} /> Nova lista
+            </Button>
+          }
+        />
+        {sheet}
+      </>
     );
   }
 
   return (
     <div className="pb-4">
-      <div className="flex items-center justify-between px-4 pb-0 pt-4">
-        <h1 className="font-display truncate text-2xl font-semibold">{list.title}</h1>
-        <IconButton label="Adicionar item avulso" onClick={() => setAddingCustom(true)}>
-          <Plus size={20} />
-        </IconButton>
+      <div className="px-4 pb-2 pt-4">
+        <h1 className="font-display text-2xl font-semibold">Corporativo</h1>
       </div>
-      <PhaseSwitch phase={list.phase ?? 'montar'} onChange={(phase) => void setPhase(list.id, phase)} />
-      <SyncErrorBanner />
-
-      {list.phase === 'comprar' ? (
-        <ComprarPhase listId={list.id} onGoToMontar={() => void setPhase(list.id, 'montar')} highlight={highlight} />
-      ) : (
-        <MontarPhase listId={list.id} />
-      )}
-
-      <AddItemSheet
-        open={addingCustom}
-        onClose={() => setAddingCustom(false)}
-        listId={list.id}
-        listLabel={list.title}
-      />
+      <ul className="grid grid-cols-1 gap-2 px-4">
+        {lists.map((l) => {
+          const pending = (itemsByList[l.id] ?? []).filter((i) => i.state === 'pending').length;
+          return (
+            <li key={l.id}>
+              <Link
+                to={`/corporativo/${l.id}`}
+                className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 transition-transform active:scale-[0.99]"
+              >
+                <ListIcon list={l} />
+                <span className="font-display min-w-0 flex-1 truncate text-[15px] font-medium text-[var(--color-text)]">{l.title}</span>
+                <span className="tabular-nums text-sm text-[var(--color-text-muted)]">
+                  {l.phase === 'comprar' ? 'Comprando · ' : 'Montando · '}
+                  {pending} pendente{pending === 1 ? '' : 's'}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+      {sheet}
     </div>
   );
 }

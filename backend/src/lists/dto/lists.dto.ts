@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
 import { ListFolder, ListPhase } from '@prisma/client';
 
 export class CreateListDto {
@@ -13,6 +13,11 @@ export class CreateListDto {
   title: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  icon?: string;
+
+  @IsOptional()
   @IsUUID()
   templateId?: string;
 }
@@ -22,6 +27,12 @@ export class UpdateListDto {
   @IsString()
   @MinLength(1)
   title?: string;
+
+  // Texto vazio remove o ícone.
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  icon?: string;
 
   @IsOptional()
   @IsEnum(ListPhase)

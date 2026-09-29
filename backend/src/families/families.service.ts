@@ -18,10 +18,15 @@ export class FamiliesService {
     await this.familyAccess.assertMember(userId, familyId);
     const members = await this.prisma.familyMember.findMany({
       where: { familyId },
-      include: { user: { select: { id: true, name: true, email: true } } },
+      include: { user: { select: { id: true, name: true, email: true, avatarUpdatedAt: true } } },
       orderBy: { joinedAt: 'asc' },
     });
-    return members.map((m) => ({ userId: m.userId, name: m.user.name, role: m.role }));
+    return members.map((m) => ({
+      userId: m.userId,
+      name: m.user.name,
+      role: m.role,
+      avatarUpdatedAt: m.user.avatarUpdatedAt,
+    }));
   }
 
   async syncStatus(userId: string, familyId: string) {

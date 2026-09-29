@@ -1,12 +1,15 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { Inbox, Home, Briefcase, Settings } from 'lucide-react';
 import clsx from 'clsx';
 import { PlusButton } from './PlusButton';
 import { useKeyboardOpen } from '../../hooks/useKeyboardInset';
 
 interface BottomNavProps {
+  addOpen: boolean;
+  addRaised: boolean;
+  addLabel: string;
+  addDisabled: boolean;
   onAddTap: () => void;
-  onAddLongPress: () => void;
 }
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -15,10 +18,8 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-muted)]',
   );
 
-export function BottomNav({ onAddTap, onAddLongPress }: BottomNavProps) {
+export function BottomNav({ addOpen, addRaised, addLabel, addDisabled, onAddTap }: BottomNavProps) {
   const keyboardOpen = useKeyboardOpen();
-  const location = useLocation();
-  const plusEnabled = location.pathname.startsWith('/inbox') || location.pathname.startsWith('/casa');
 
   // Some quando o teclado abre (§4) — não só quando o foco muda de tela.
   if (keyboardOpen) return null;
@@ -34,7 +35,7 @@ export function BottomNav({ onAddTap, onAddLongPress }: BottomNavProps) {
         Casa
       </NavLink>
       <div className="flex flex-1 justify-center">
-        <PlusButton disabled={!plusEnabled} onTap={onAddTap} onLongPress={onAddLongPress} />
+        <PlusButton disabled={addDisabled} open={addOpen} raised={addRaised} label={addLabel} onTap={onAddTap} />
       </div>
       <NavLink to="/corporativo" className={linkClass}>
         <Briefcase size={22} />

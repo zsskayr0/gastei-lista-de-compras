@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Inbox, Trash2 } from 'lucide-react';
 import { useListsStore } from '../../state/listsStore';
 import { useMembersStore } from '../../state/membersStore';
 import { Stepper } from '../ui/Stepper';
@@ -18,18 +18,21 @@ interface CheckableItemRowProps {
   highlightedBy?: string | null;
   /** Selo de diferença (Corporativo/Montar) — "+2"/"−1", cor neutra (§6). */
   diffBadge?: number | null;
+  /** Casa: mostra o botão que tira o item da lista e o devolve ao Inbox. */
+  returnToInbox?: boolean;
 }
 
 /** Linha de item riscável — usada em Casa e no Comprar do Corporativo
  * (§6, §9): riscar anima transform/opacity, vibra e toca um "tique";
  * tocar de novo devolve à lista ativa. Nunca falha silenciosamente: se
  * outra pessoa riscar quase junto, mostra quem foi. */
-export function CheckableItemRow({ item, index = 99, highlighted, highlightedBy, diffBadge }: CheckableItemRowProps) {
+export function CheckableItemRow({ item, index = 99, highlighted, highlightedBy, diffBadge, returnToInbox }: CheckableItemRowProps) {
   const toggleChecked = useListsStore((s) => s.toggleChecked);
   const incrementItemQuantity = useListsStore((s) => s.incrementItemQuantity);
   const softDeleteItem = useListsStore((s) => s.softDeleteItem);
   const undoSoftDeleteItem = useListsStore((s) => s.undoSoftDeleteItem);
   const renameItem = useListsStore((s) => s.renameItem);
+  const returnItemToInbox = useListsStore((s) => s.returnItemToInbox);
   const nameFor = useMembersStore((s) => s.nameFor);
   const [editing, setEditing] = useState(false);
 
@@ -103,6 +106,27 @@ export function CheckableItemRow({ item, index = 99, highlighted, highlightedBy,
         onSet={(n) => void incrementItemQuantity(item, n - item.quantityPlanned)}
         min={1}
       />
+
+      {returnToInbox && (
+        <IconButton
+          label="Devolver ao Inbox"
+          onClick={() => {
+            void returnItemToInbox(item).then((back) => {
+              if (!back) return;
+              showUndoSnackbar(
+                'Item voltou pro Inbox.',
+                () => {
+                  void softDeleteItem(back);
+                  void undoSoftDeleteItem(item);
+                },
+                { key: 'item-to-inbox', plural: (n) => `${n} itens voltaram pro Inbox.` },
+              );
+            });
+          }}
+        >
+          <Inbox size={18} />
+        </IconButton>
+      )}
 
       <IconButton
         label="Remover"

@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Pencil, Trash2 } from 'lucide-react';
+import { ChevronLeft, Pencil, Smile, Trash2 } from 'lucide-react';
 import { useListsStore, EMPTY_ITEMS } from '../../state/listsStore';
 import { useAuthStore } from '../../lib/auth/authStore';
 import { useListSync, useRemoteCheckNotice } from '../../hooks/useListSync';
@@ -11,6 +11,8 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { CheckableItemRow } from '../../components/list/CheckableItemRow';
 import { TextInputSheet } from '../../components/ui/TextInputSheet';
 import { useSnackbarStore } from '../../state/snackbarStore';
+import { ListIcon } from '../../components/ui/ListIcon';
+import { ListIconSheet } from '../../components/ui/ListIconSheet';
 
 export function CasaListPage() {
   const { listId } = useParams<{ listId: string }>();
@@ -20,6 +22,8 @@ export function CasaListPage() {
   const session = useAuthStore((s) => s.session);
   const renameList = useListsStore((s) => s.renameList);
   const deleteList = useListsStore((s) => s.deleteList);
+  const setListIcon = useListsStore((s) => s.setListIcon);
+  const [pickingIcon, setPickingIcon] = useState(false);
   const [highlight, setHighlight] = useState<{ itemId: string; by: string } | null>(null);
   const [renaming, setRenaming] = useState(false);
   const showSnackbar = useSnackbarStore((s) => s.show);
@@ -48,10 +52,12 @@ export function CasaListPage() {
         <IconButton label="Voltar" onClick={() => navigate('/casa')}>
           <ChevronLeft size={20} />
         </IconButton>
+        <ListIcon list={list} size={32} />
         <h1 className="font-display flex-1 truncate text-xl font-semibold">{list.title}</h1>
         <OverflowMenu
           actions={[
             { label: 'Renomear', icon: <Pencil size={16} />, onSelect: () => setRenaming(true) },
+            { label: 'Trocar ícone', icon: <Smile size={16} />, onSelect: () => setPickingIcon(true) },
             {
               label: 'Excluir lista',
               icon: <Trash2 size={16} />,
@@ -75,6 +81,14 @@ export function CasaListPage() {
         onSubmit={(name) => void renameList(list.id, name)}
       />
 
+      <ListIconSheet
+        open={pickingIcon}
+        onClose={() => setPickingIcon(false)}
+        value={list.icon ?? null}
+        onPick={(key) => void setListIcon(list.id, key)}
+        onRemove={() => void setListIcon(list.id, null)}
+      />
+
       <SyncErrorBanner />
 
       {items.length === 0 ? (
@@ -87,6 +101,7 @@ export function CasaListPage() {
                 key={item.id}
                 item={item}
                 index={index}
+                returnToInbox
                 highlighted={highlight?.itemId === item.id}
                 highlightedBy={highlight?.itemId === item.id ? highlight.by : null}
               />

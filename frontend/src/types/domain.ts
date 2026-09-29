@@ -54,6 +54,8 @@ export interface List {
   familyId: string;
   folder: Folder;
   title: string;
+  /** Chave de `content/listIcons.ts`; ausente = ícone padrão da pasta. */
+  icon?: string | null;
   status: ListStatus;
   phase: ListPhase | null;
   purchasePhaseStartedAt: string | null;

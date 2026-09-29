@@ -8,6 +8,7 @@ export interface Member {
   userId: string;
   name: string;
   role: Role;
+  avatarUpdatedAt?: string | null;
 }
 
 interface MembersState {

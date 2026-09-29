@@ -9,9 +9,11 @@ import { useCatalogStore } from '../../state/catalogStore';
 import { catalogApi, dictionaryApi, type BulkCatalogEntry, type CatalogUpdateDto } from '../../lib/api/endpoints';
 import { normalizeText } from '../../utils/text';
 import { resizeImage } from '../../utils/image';
+import { useIsDesktop } from '../../hooks/useMediaQuery';
 import { CatalogThumb } from '../../components/ui/CatalogThumb';
 import { SettingsScreen } from './SettingsScreen';
 import { CatalogEditSheet } from './CatalogEditSheet';
+import { CatalogEditPanel } from './CatalogEditPanel';
 import { CatalogPasteSheet } from './CatalogPasteSheet';
 import { BottomSheet } from '../../components/ui/BottomSheet';
 import { Button } from '../../components/ui/Button';
@@ -30,15 +32,19 @@ interface RowProps {
   selected: boolean;
   /** Há alguma linha selecionada — o toque passa a marcar/desmarcar. */
   selecting: boolean;
-  onToggle: () => void;
+  /** Linha com foco de teclado (desktop) — navegação por setas. */
+  focused?: boolean;
+  onToggle: (e?: MouseEvent) => void;
   onEdit: () => void;
   onPickCategory: () => void;
   onSetExpected: (quantity: number) => void;
 }
 
 /** Linha do catálogo. Pressão longa entra no modo de seleção múltipla; com a
- * seleção ativa, tocar em qualquer parte da linha marca/desmarca. */
-function CatalogRow({ item, category, selected, selecting, onToggle, onEdit, onPickCategory, onSetExpected }: RowProps) {
+ * seleção ativa, tocar em qualquer parte da linha marca/desmarca. No desktop,
+ * a caixa de seleção só aparece com o mouse em cima (ou já marcada) — clicar
+ * nela alterna, e Shift+clique seleciona o intervalo. */
+function CatalogRow({ item, category, selected, selecting, focused, onToggle, onEdit, onPickCategory, onSetExpected }: RowProps) {
   // Rascunho só durante a digitação; fora dela mostra o valor salvo.
   const [draft, setDraft] = useState<string | null>(null);
 
@@ -102,19 +108,43 @@ function CatalogRow({ item, category, selected, selecting, onToggle, onEdit, onP
       onClickCapture={onClickCapture}
       onContextMenu={(e) => e.preventDefault()}
       aria-selected={selecting ? selected : undefined}
+      data-catalog-row={item.id}
       style={{ WebkitTouchCallout: 'none' }}
       className={
-        'relative flex select-none items-center gap-1 border-b border-[var(--color-border)] pl-3 transition-colors duration-[var(--motion-base)] ease-[var(--motion-ease)] ' +
-        (selected ? 'bg-[var(--color-accent)]/12' : '')
+        'group relative flex select-none items-center gap-1 border-b border-[var(--color-border)] pl-3 transition-colors duration-[var(--motion-base)] ease-[var(--motion-ease)] ' +
+        (selected ? 'bg-[var(--color-accent)]/12' : focused ? 'bg-[var(--color-surface-alt)]' : '')
       }
     >
       <span
         aria-hidden
         className={
           'absolute inset-y-1 left-0 w-[3px] rounded-full bg-[var(--color-accent)] transition-opacity duration-[var(--motion-base)] ' +
-          (selected ? 'opacity-100' : 'opacity-0')
+          (selected || focused ? 'opacity-100' : 'opacity-0')
         }
       />
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle(e);
+        }}
+        aria-label={selected ? `Desmarcar ${item.name}` : `Marcar ${item.name}`}
+        className={
+          'hidden shrink-0 items-center justify-center rounded-full p-1 text-[var(--color-text-faint)] transition-opacity duration-[var(--motion-fast)] hover:text-[var(--color-text)] lg:flex ' +
+          (selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100')
+        }
+      >
+        <span
+          className={
+            'flex h-5 w-5 items-center justify-center rounded-full border ' +
+            (selected
+              ? 'border-[var(--color-accent)] bg-[var(--color-accent)] text-[var(--color-accent-fg)]'
+              : 'border-[var(--color-border-strong)]')
+          }
+        >
+          {selected && <Check size={12} strokeWidth={3} />}
+        </span>
+      </button>
       <CatalogThumb item={item} size={40} colorHex={category?.color} />
       <button
         type="button"
@@ -126,7 +156,7 @@ function CatalogRow({ item, category, selected, selecting, onToggle, onEdit, onP
       {selected && (
         <span
           aria-hidden
-          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-fg)] animate-[pop-in_var(--motion-base)_var(--motion-ease)]"
+          className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent)] text-[var(--color-accent-fg)] animate-[pop-in_var(--motion-base)_var(--motion-ease)] lg:hidden"
         >
           <Check size={12} strokeWidth={3} />
         </span>
@@ -197,7 +227,12 @@ export function CatalogSettings() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<DescribedError | null>(null);
   const [termCount, setTermCount] = useState<number | null>(null);
+  // Linha com foco de teclado (desktop) — independente da seleção/edição.
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const lastToggled = useRef<string | null>(null);
 
+  const isDesktop = useIsDesktop();
   const familyId = session?.familyId;
 
   useEffect(() => {
@@ -227,17 +262,64 @@ export function CatalogSettings() {
     return q ? items.filter((i) => normalizeText(i.name).includes(q)) : items;
   }, [items, query]);
 
+  // Atalhos de teclado do desktop: "/" foca a busca, setas navegam a lista,
+  // Enter abre a edição da linha focada, Ctrl/Cmd+A seleciona tudo.
+  useEffect(() => {
+    if (!isDesktop) return;
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const inField = !!target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+
+      if (e.key === '/' && !inField) {
+        e.preventDefault();
+        searchRef.current?.focus();
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a' && !inField) {
+        e.preventDefault();
+        setSelected(new Set(filtered.map((i) => i.id)));
+        return;
+      }
+      if (inField) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        if (filtered.length === 0) return;
+        e.preventDefault();
+        const idx = focusedId ? filtered.findIndex((i) => i.id === focusedId) : -1;
+        const next = e.key === 'ArrowDown' ? Math.min(filtered.length - 1, idx + 1) : Math.max(0, idx === -1 ? 0 : idx - 1);
+        setFocusedId(filtered[next].id);
+        document.querySelector(`[data-catalog-row="${filtered[next].id}"]`)?.scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter' && focusedId) {
+        const item = filtered.find((i) => i.id === focusedId);
+        if (item) setEditing(item);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isDesktop, filtered, focusedId]);
+
   if (!familyId) return null;
 
   const categoryOf = (id: string | null) => categories.find((c) => c.id === id);
 
-  const toggle = (id: string) =>
+  const toggle = (id: string, e?: MouseEvent) => {
+    if (e?.shiftKey && lastToggled.current) {
+      const ids = filtered.map((i) => i.id);
+      const a = ids.indexOf(lastToggled.current);
+      const b = ids.indexOf(id);
+      if (a !== -1 && b !== -1) {
+        const [lo, hi] = a < b ? [a, b] : [b, a];
+        setSelected((prev) => new Set([...prev, ...ids.slice(lo, hi + 1)]));
+        return;
+      }
+    }
+    lastToggled.current = id;
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
+  };
 
   const run = async (context: string, fn: () => Promise<void>) => {
     setBusy(true);
@@ -335,11 +417,13 @@ export function CatalogSettings() {
 
   return (
     <SettingsScreen title="Catálogo">
-      <div className="mx-auto w-full max-w-[2000px]">
+      <div className="mx-auto flex w-full max-w-[2000px] items-start gap-6">
+      <div className="min-w-0 flex-1">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <div className="relative min-w-[180px] flex-1">
             <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-faint)]" />
             <input
+              ref={searchRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar no catálogo"
@@ -379,7 +463,12 @@ export function CatalogSettings() {
         )}
 
         {selected.size === 0 && items.length > 0 && (
-          <p className="mb-2 text-xs text-[var(--color-text-faint)]">Segure um item para selecionar vários.</p>
+          <p className="mb-2 text-xs text-[var(--color-text-faint)]">
+            <span className="lg:hidden">Segure um item para selecionar vários.</span>
+            <span className="hidden lg:inline">
+              Passe o mouse para marcar vários (Shift para intervalo, Ctrl/Cmd+A para todos) — “/” busca, setas navegam.
+            </span>
+          </p>
         )}
 
         {error && (
@@ -404,7 +493,7 @@ export function CatalogSettings() {
           <p className="py-8 text-center text-[var(--color-text-muted)]">Nada encontrado para “{query}”.</p>
         )}
 
-        <ul className="lg:grid lg:grid-cols-2 lg:gap-x-6 xl:grid-cols-3 2xl:grid-cols-4">
+        <ul className="lg:grid lg:grid-cols-2 lg:gap-x-6 xl:grid-cols-3">
           {filtered.map((item) => (
             <CatalogRow
               key={item.id}
@@ -412,13 +501,30 @@ export function CatalogSettings() {
               category={categoryOf(item.categoryId)}
               selected={selected.has(item.id)}
               selecting={selected.size > 0}
-              onToggle={() => toggle(item.id)}
-              onEdit={() => setEditing(item)}
+              focused={isDesktop && focusedId === item.id}
+              onToggle={(e) => toggle(item.id, e)}
+              onEdit={() => {
+                setFocusedId(item.id);
+                setEditing(item);
+              }}
               onPickCategory={() => setPicking(item)}
               onSetExpected={(q) => void quickExpected(item, q)}
             />
           ))}
         </ul>
+      </div>
+
+      <CatalogEditPanel
+        item={isDesktop ? editingItem : null}
+        categories={categories}
+        saving={busy}
+        error={editing ? error : null}
+        onClose={() => setEditing(null)}
+        onSave={(id, dto) => void saveOne(id, dto)}
+        onDelete={(item) => void removeOne(item)}
+        onUploadImage={(item, file) => void uploadImage(item, file)}
+        onRemoveImage={(item) => void removeImage(item)}
+      />
       </div>
 
       <BottomSheet open={pickingFrequency} onClose={() => setPickingFrequency(false)}>
@@ -447,7 +553,7 @@ export function CatalogSettings() {
         }}
       />
       <CatalogEditSheet
-        item={editingItem}
+        item={!isDesktop ? editingItem : null}
         categories={categories}
         saving={busy}
         error={editing ? error : null}

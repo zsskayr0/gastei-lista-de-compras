@@ -29,6 +29,7 @@ export class ListsService {
         familyId: dto.familyId,
         folder: dto.folder,
         title: dto.title,
+        icon: dto.icon || null,
         templateId: dto.templateId,
         phase: dto.folder === 'corporativo' ? 'montar' : null,
         purchasePhaseStartedAt: null,
@@ -49,6 +50,7 @@ export class ListsService {
 
     const data: Record<string, unknown> = {};
     if (dto.title !== undefined) data.title = dto.title;
+    if (dto.icon !== undefined) data.icon = dto.icon || null;
 
     if (dto.phase !== undefined) {
       if (list.folder !== 'corporativo') {

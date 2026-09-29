@@ -7,3 +7,10 @@ export function catalogImageUrl(item: Pick<CatalogItem, 'id' | 'imageUpdatedAt'>
   const v = Date.parse(item.imageUpdatedAt);
   return `${getApiBaseUrl()}/media/catalog/${item.id}?v=${Number.isFinite(v) ? v : 0}`;
 }
+
+/** URL da foto de perfil, ou null se a pessoa não tem. `?v=` muda a cada troca. */
+export function avatarImageUrl(userId: string, avatarUpdatedAt: string | null | undefined): string | null {
+  if (!avatarUpdatedAt) return null;
+  const v = Date.parse(avatarUpdatedAt);
+  return `${getApiBaseUrl()}/media/avatar/${userId}?v=${Number.isFinite(v) ? v : 0}`;
+}
