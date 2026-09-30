@@ -6,6 +6,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 Como publicar uma versão: atualize este arquivo, `git tag vX.Y.Z`, `git push --tags` e crie o release
 com `gh release create vX.Y.Z --notes-file <trecho>`.
 
+## [0.4.2] — 2026-09-29
+
+### Corrigido
+- **Login com maiúscula:** o teclado do celular capitaliza a 1ª letra do e-mail e o login falhava. E-mail
+  agora não diferencia maiúscula (normalizado no servidor e no app; migration que põe os existentes em
+  minúsculas) e o campo desliga a capitalização automática.
+- **Títulos colados na barra de notificação:** o app respeita a área segura do topo.
+
 ## [0.4.1] — 2026-09-29
 
 ### Corrigido

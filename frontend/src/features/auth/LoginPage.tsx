@@ -21,7 +21,7 @@ export function LoginPage() {
     setSubmitting(true);
     if (native) setApiBaseUrl(server);
     try {
-      await login(email, password);
+      await login(email.trim().toLowerCase(), password);
     } catch {
       // erro já fica em authStore.error
     } finally {
@@ -43,7 +43,7 @@ export function LoginPage() {
           />
         )}
         <input
-          type="email"
+          type="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="email" autoComplete="email"
           required
           placeholder="E-mail"
           value={email}

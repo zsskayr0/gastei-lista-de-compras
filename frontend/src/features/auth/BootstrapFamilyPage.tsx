@@ -51,7 +51,7 @@ export function BootstrapFamilyPage() {
           className={inputClass}
         />
         <input
-          type="email"
+          type="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="email" autoComplete="email"
           required
           placeholder="E-mail"
           value={email}

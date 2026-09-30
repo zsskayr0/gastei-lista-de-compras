@@ -38,7 +38,7 @@ export function AcceptInvitePage() {
       <form onSubmit={onSubmit} className="space-y-3">
         <input required placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
         <input
-          type="email"
+          type="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="email" autoComplete="email"
           required
           placeholder="E-mail"
           value={email}
