@@ -6,6 +6,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 Como publicar uma versão: atualize este arquivo, `git tag vX.Y.Z`, `git push --tags` e crie o release
 com `gh release create vX.Y.Z --notes-file <trecho>`.
 
+## [0.4.1] — 2026-09-29
+
+### Corrigido
+- **QR de convite gerado no APK:** apontava para `tauri.localhost` (só existe no aparelho de quem gerou) e o
+  celular convidado ficava em tela branca. O link agora usa sempre o endereço do servidor.
+- **APK sem conexão:** o servidor passou a responder o preflight de Private Network Access
+  (`Access-Control-Allow-Private-Network`), exigido pelo WebView ao falar com IP privado (Tailscale).
+
 ## [0.4.0] — 2026-09-29
 
 ### Adicionado

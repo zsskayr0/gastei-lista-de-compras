@@ -12,6 +12,12 @@ async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { logger: ['log', 'warn', 'error'] });
 
   app.use(helmet({ contentSecurityPolicy: false, hsts: false, crossOriginOpenerPolicy: false, originAgentCluster: false }));
+  // Private Network Access: o app instalado (WebView em tauri.localhost) fala com o servidor
+  // por IP privado (Tailscale) e o Chrome exige esta resposta no preflight.
+  app.use((req: { headers: Record<string, unknown> }, res: { setHeader: (k: string, v: string) => void }, next: () => void) => {
+    if (req.headers['access-control-request-private-network']) res.setHeader('Access-Control-Allow-Private-Network', 'true');
+    next();
+  });
   app.enableCors({ origin: true, credentials: true });
   app.useGlobalPipes(
     new ValidationPipe({

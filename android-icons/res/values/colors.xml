@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#002820</color>
-    <color name="splash_background">#002820</color>
-    <!-- fundo do app: verde quase imperceptível -->
-    <color name="gastei_background">#F4F8F5</color>
+    <color name="ic_launcher_background">#3A0F24</color>
+    <color name="splash_background">#3A0F24</color>
+    <!-- fundo do app: rosa quase imperceptível -->
+    <color name="gastei_background">#FFFBFD</color>
 </resources>

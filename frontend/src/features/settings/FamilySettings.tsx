@@ -6,6 +6,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useAuthStore } from '../../lib/auth/authStore';
 import { useMembersStore } from '../../state/membersStore';
 import { invitesApi } from '../../lib/api/endpoints';
+import { serverOrigin } from '../../lib/api/client';
 import { SettingsScreen } from './SettingsScreen';
 import { Button } from '../../components/ui/Button';
 import { InitialAvatar } from '../../components/ui/InitialAvatar';
@@ -37,7 +38,7 @@ export function FamilySettings() {
     }
   };
 
-  const deepLink = invite ? `${window.location.origin}/convite/${invite.token}` : null;
+  const deepLink = invite ? `${serverOrigin()}/convite/${invite.token}` : null;
 
   return (
     <SettingsScreen title="Família e convites">

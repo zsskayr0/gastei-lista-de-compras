@@ -37,6 +37,12 @@ export function setApiBaseUrl(url: string | null) {
   }
 }
 
+/** Endereço (origem) do servidor, para links que outras pessoas vão abrir — ex.: o QR de convite.
+ * No app instalado `window.location.origin` é `tauri.localhost`, que só existe naquele aparelho. */
+export function serverOrigin(): string {
+  return new URL(getApiBaseUrl(), window.location.origin).origin;
+}
+
 /** Só o app instalado (Tauri/APK) precisa escolher o servidor; no navegador ele é o próprio host. */
 export function isNativeShell(): boolean {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
