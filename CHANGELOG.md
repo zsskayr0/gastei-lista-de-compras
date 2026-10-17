@@ -6,6 +6,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 Como publicar uma versão: atualize este arquivo, `git tag vX.Y.Z`, `git push --tags` e crie o release
 com `gh release create vX.Y.Z --notes-file <trecho>`.
 
+## [0.4.3] — 2026-10-16
+
+### Corrigido
+- **Conteúdo sob a barra de status no Android:** o contêiner nativo respeita os insets das barras do
+  sistema e dos recortes de tela em todas as telas, incluindo login e painéis. Os insets já aplicados
+  são zerados antes de chegar ao WebView para evitar espaçamento duplicado; o teclado mantém seus eventos.
+
+### Alterado
+- Nova distribuição Android para atualização pelo Obtainium, com versão e código de versão incrementados.
+- Mantidos o identificador do aplicativo e a chave de assinatura da distribuição anterior.
+
 ## [0.4.2] — 2026-09-29
 
 ### Corrigido
