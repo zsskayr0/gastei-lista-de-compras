@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Pencil, Smile, Trash2 } from 'lucide-react';
+import { Archive, ArchiveRestore, ChevronLeft, Pencil, Smile, Trash2 } from 'lucide-react';
 import { useListsStore } from '../../state/listsStore';
 import { useCatalogStore } from '../../state/catalogStore';
 import { useCorporativoUiStore } from '../../state/corporativoUiStore';
@@ -29,6 +29,7 @@ export function CorporativoListPage() {
   const setPhase = useListsStore((s) => s.setPhase);
   const renameList = useListsStore((s) => s.renameList);
   const deleteList = useListsStore((s) => s.deleteList);
+  const setListArchived = useListsStore((s) => s.setListArchived);
   const setListIcon = useListsStore((s) => s.setListIcon);
   const [pickingIcon, setPickingIcon] = useState(false);
   const showSnackbar = useSnackbarStore((s) => s.show);
@@ -66,6 +67,24 @@ export function CorporativoListPage() {
           actions={[
             { label: 'Renomear', icon: <Pencil size={16} />, onSelect: () => setRenaming(true) },
             { label: 'Trocar ícone', icon: <Smile size={16} />, onSelect: () => setPickingIcon(true) },
+            list.archivedAt
+              ? {
+                  label: 'Desarquivar',
+                  icon: <ArchiveRestore size={16} />,
+                  onSelect: () => {
+                    void setListArchived(list.id, false);
+                    showSnackbar({ message: 'Lista desarquivada.', tone: 'neutral', durationMs: 3000 });
+                  },
+                }
+              : {
+                  label: 'Arquivar',
+                  icon: <Archive size={16} />,
+                  onSelect: () => {
+                    void setListArchived(list.id, true);
+                    showSnackbar({ message: 'Lista arquivada.', tone: 'neutral', durationMs: 3000 });
+                    navigate('/corporativo');
+                  },
+                },
             {
               label: 'Excluir lista',
               icon: <Trash2 size={16} />,

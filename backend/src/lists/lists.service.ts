@@ -52,6 +52,8 @@ export class ListsService {
     if (dto.title !== undefined) data.title = dto.title;
     if (dto.icon !== undefined) data.icon = dto.icon || null;
 
+    if (dto.archived !== undefined) data.archivedAt = dto.archived ? new Date() : null;
+
     if (dto.phase !== undefined) {
       if (list.folder !== 'corporativo') {
         throw new BadRequestException('Fase só se aplica a listas de Corporativo.');

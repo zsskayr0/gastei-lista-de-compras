@@ -6,6 +6,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { Button } from '../../components/ui/Button';
 import { TextInputSheet } from '../../components/ui/TextInputSheet';
 import { ListIcon } from '../../components/ui/ListIcon';
+import { ArchivedListsSection } from '../../components/list/ArchivedListsSection';
 
 /** Corporativo: várias listas, como Casa — cada compra diferente tem a sua.
  * Cada lista tem Montar e Comprar (ver CorporativoListPage). */
@@ -15,7 +16,11 @@ export function CorporativoPage() {
   const status = useListsStore((s) => s.status);
   const createList = useListsStore((s) => s.createList);
   const lists = useMemo(
-    () => allLists.filter((l) => l.folder === 'corporativo' && l.status === 'active'),
+    () => allLists.filter((l) => l.folder === 'corporativo' && l.status === 'active' && !l.archivedAt),
+    [allLists],
+  );
+  const archived = useMemo(
+    () => allLists.filter((l) => l.folder === 'corporativo' && l.status === 'active' && l.archivedAt),
     [allLists],
   );
   const [creating, setCreating] = useState(false);
@@ -49,6 +54,7 @@ export function CorporativoPage() {
             </Button>
           }
         />
+        <ArchivedListsSection lists={archived} basePath="/corporativo" />
         {sheet}
       </>
     );
@@ -79,6 +85,7 @@ export function CorporativoPage() {
           );
         })}
       </ul>
+      <ArchivedListsSection lists={archived} basePath="/corporativo" />
       {sheet}
     </div>
   );

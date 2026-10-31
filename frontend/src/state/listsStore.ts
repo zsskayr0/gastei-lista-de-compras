@@ -86,6 +86,7 @@ interface ListsState {
   /** Troca (ou, com `null`, remove) o ícone da lista. Vai por REST — não é campo de sync. */
   setListIcon: (listId: string, icon: string | null) => Promise<void>;
   deleteList: (listId: string) => Promise<void>;
+  setListArchived: (listId: string, archived: boolean) => Promise<void>;
 
   applyLocalListItemsPatch: (listId: string, items: ListItem[]) => void;
 }
@@ -556,6 +557,19 @@ export const useListsStore = create<ListsState>((set, get) => ({
       await listsApi.update(listId, { icon: icon ?? '' });
     } catch (err) {
       reportError(err, 'Trocar ícone da lista');
+    }
+  },
+
+  setListArchived: async (listId, archived) => {
+    const list = get().lists.find((l) => l.id === listId);
+    if (!list) return;
+    const updated: List = { ...list, archivedAt: archived ? new Date().toISOString() : null };
+    set((s) => ({ lists: s.lists.map((l) => (l.id === listId ? updated : l)) }));
+    await listsRepo.put(updated);
+    try {
+      await listsApi.update(listId, { archived });
+    } catch (err) {
+      reportError(err, archived ? 'Arquivar lista' : 'Desarquivar lista');
     }
   },
 

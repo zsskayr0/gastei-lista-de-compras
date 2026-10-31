@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
 import { ListFolder, ListPhase } from '@prisma/client';
 
 export class CreateListDto {
@@ -37,6 +37,11 @@ export class UpdateListDto {
   @IsOptional()
   @IsEnum(ListPhase)
   phase?: ListPhase;
+
+  // Arquivar/desarquivar manualmente (some das abas, itens preservados).
+  @IsOptional()
+  @IsBoolean()
+  archived?: boolean;
 
   @IsOptional()
   @IsEnum(['active', 'archived'] as const)

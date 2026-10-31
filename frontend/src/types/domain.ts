@@ -62,6 +62,8 @@ export interface List {
   templateId: string | null;
   createdAt: string;
   closedAt: string | null;
+  /** Arquivada à mão (some das abas, itens preservados); null = visível. */
+  archivedAt?: string | null;
   deletedAt: string | null;
 }
 

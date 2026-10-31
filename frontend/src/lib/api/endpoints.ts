@@ -72,7 +72,7 @@ export const listsApi = {
   create: (dto: { familyId: string; folder: string; title: string; icon?: string; templateId?: string }) =>
     apiRequest<List>('/lists', { method: 'POST', body: dto }),
   get: (id: string) => apiRequest<List & { items: ListItem[] }>(`/lists/${id}`),
-  update: (id: string, dto: Partial<Pick<List, 'title' | 'phase' | 'status'>> & { icon?: string }) =>
+  update: (id: string, dto: Partial<Pick<List, 'title' | 'phase' | 'status'>> & { icon?: string; archived?: boolean }) =>
     apiRequest<List>(`/lists/${id}`, { method: 'PATCH', body: dto }),
   softDelete: (id: string) => apiRequest<void>(`/lists/${id}`, { method: 'DELETE' }),
 };

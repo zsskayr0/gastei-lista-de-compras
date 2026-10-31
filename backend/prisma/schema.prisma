@@ -258,6 +258,7 @@ model List {
   templateId              String?    @map("template_id")
   createdAt               DateTime   @default(now()) @map("created_at")
   closedAt                DateTime?  @map("closed_at")
+  archivedAt              DateTime?  @map("archived_at")
   deletedAt               DateTime?  @map("deleted_at")
 
   family     Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)

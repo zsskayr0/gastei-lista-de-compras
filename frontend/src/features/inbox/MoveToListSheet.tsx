@@ -14,7 +14,7 @@ interface MoveToListSheetProps {
  * está no escopo desta passada. */
 export function MoveToListSheet({ item, onClose, onMoved }: MoveToListSheetProps) {
   const allLists = useListsStore((s) => s.lists);
-  const lists = useMemo(() => allLists.filter((l) => l.folder === 'casa'), [allLists]);
+  const lists = useMemo(() => allLists.filter((l) => l.folder === 'casa' && !l.archivedAt), [allLists]);
   const moveInboxItemToList = useListsStore((s) => s.moveInboxItemToList);
   const createList = useListsStore((s) => s.createList);
   const [newTitle, setNewTitle] = useState('');

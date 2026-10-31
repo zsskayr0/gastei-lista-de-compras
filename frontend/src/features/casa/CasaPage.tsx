@@ -9,12 +9,14 @@ import { pickVoice } from '../../content/voice';
 import { TextInputSheet } from '../../components/ui/TextInputSheet';
 import { BuildFromInboxSheet } from './BuildFromInboxSheet';
 import { ListIcon } from '../../components/ui/ListIcon';
+import { ArchivedListsSection } from '../../components/list/ArchivedListsSection';
 
 export function CasaPage() {
   const allLists = useListsStore((s) => s.lists);
   const itemsByList = useListsStore((s) => s.itemsByList);
   const createList = useListsStore((s) => s.createList);
-  const lists = useMemo(() => allLists.filter((l) => l.folder === 'casa'), [allLists]);
+  const lists = useMemo(() => allLists.filter((l) => l.folder === 'casa' && !l.archivedAt), [allLists]);
+  const archived = useMemo(() => allLists.filter((l) => l.folder === 'casa' && l.archivedAt), [allLists]);
   const emptyMessage = useMemo(() => pickVoice('casaListaVazia'), [lists.length === 0]);
   const [creating, setCreating] = useState(false);
   const [buildingFromInbox, setBuildingFromInbox] = useState(false);
@@ -55,6 +57,7 @@ export function CasaPage() {
             </div>
           }
         />
+        <ArchivedListsSection lists={archived} basePath="/casa" />
         {actions}
       </>
     );
@@ -93,6 +96,7 @@ export function CasaPage() {
         })}
       </ul>
 
+      <ArchivedListsSection lists={archived} basePath="/casa" />
       {actions}
     </div>
   );
