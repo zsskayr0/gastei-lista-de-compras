@@ -6,6 +6,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/). 
 Como publicar uma versão: atualize este arquivo, `git tag vX.Y.Z`, `git push --tags` e crie o release
 com `gh release create vX.Y.Z --notes-file <trecho>`.
 
+## [0.4.4] — 2026-11-01
+
+### Adicionado
+- **Arquivar listas (Casa e Corporativo):** a lista arquivada sai da aba e fica numa seção recolhível
+  "Arquivadas", de onde dá para abrir ou desarquivar. Os itens ficam preservados. Nova coluna
+  `archived_at` (migration), separada do encerramento de compra.
+- **Menu ao segurar a lista:** segurar um card (ou botão direito no PC) abre um menu flutuante com
+  Renomear, Trocar ícone, Arquivar e Excluir.
+- **Concluídas automáticas:** lista com itens e nenhum pendente vai sozinha para a seção "Concluídas" e
+  volta ao entrar um item novo. No Corporativo só vale na fase Comprar.
+
 ## [0.4.3] — 2026-10-16
 
 ### Corrigido
