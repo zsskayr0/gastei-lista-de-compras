@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ListChecks, Plus, Inbox } from 'lucide-react';
 import { useListsStore } from '../../state/listsStore';
 import { EmptyState } from '../../components/ui/EmptyState';
@@ -9,13 +9,16 @@ import { pickVoice } from '../../content/voice';
 import { TextInputSheet } from '../../components/ui/TextInputSheet';
 import { BuildFromInboxSheet } from './BuildFromInboxSheet';
 import { ListIcon } from '../../components/ui/ListIcon';
-import { ArchivedListsSection } from '../../components/list/ArchivedListsSection';
+import { ListCardMenu } from '../../components/list/ListCardMenu';
+import { ConcludedAndArchived, isListDone } from '../../components/list/ArchivedListsSection';
 
 export function CasaPage() {
   const allLists = useListsStore((s) => s.lists);
   const itemsByList = useListsStore((s) => s.itemsByList);
   const createList = useListsStore((s) => s.createList);
-  const lists = useMemo(() => allLists.filter((l) => l.folder === 'casa' && !l.archivedAt), [allLists]);
+  const visible = useMemo(() => allLists.filter((l) => l.folder === 'casa' && !l.archivedAt), [allLists]);
+  const lists = useMemo(() => visible.filter((l) => !isListDone(itemsByList[l.id])), [visible, itemsByList]);
+  const done = useMemo(() => visible.filter((l) => isListDone(itemsByList[l.id])), [visible, itemsByList]);
   const archived = useMemo(() => allLists.filter((l) => l.folder === 'casa' && l.archivedAt), [allLists]);
   const emptyMessage = useMemo(() => pickVoice('casaListaVazia'), [lists.length === 0]);
   const [creating, setCreating] = useState(false);
@@ -57,7 +60,7 @@ export function CasaPage() {
             </div>
           }
         />
-        <ArchivedListsSection lists={archived} basePath="/casa" />
+        <ConcludedAndArchived done={done} archived={archived} basePath="/casa" />
         {actions}
       </>
     );
@@ -79,7 +82,8 @@ export function CasaPage() {
           const pending = items.filter((i) => i.state === 'pending').length;
           return (
             <li key={l.id}>
-              <Link
+              <ListCardMenu
+                list={l}
                 to={`/casa/${l.id}`}
                 className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 transition-transform active:scale-[0.99]"
               >
@@ -90,13 +94,13 @@ export function CasaPage() {
                 <span className="tabular-nums text-sm text-[var(--color-text-muted)]">
                   {pending} pendente{pending === 1 ? '' : 's'}
                 </span>
-              </Link>
+              </ListCardMenu>
             </li>
           );
         })}
       </ul>
 
-      <ArchivedListsSection lists={archived} basePath="/casa" />
+      <ConcludedAndArchived done={done} archived={archived} basePath="/casa" />
       {actions}
     </div>
   );
